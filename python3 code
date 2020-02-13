@@ -1,0 +1,88 @@
+
+import sys
+import math
+N_sym = input("Enter the number of symbols for PDSCH/PUSCH per slot and press enter key: ")
+RB = input("Enter number total RBs scheduled for PDSCH/PUSCH and press enter key: ")
+mcs_Table = input("Please enter 1 if DL-256QAM is enabled, else enter 0. Press enter key after: ")
+mcs = input("Enter mcs to use for TBS and press enter key: ")
+N_layers = input("Enter the #layers to use for TBS and press enter key: ")
+N_oh = 0
+
+N_dmrs = 24
+N_sc = 12
+
+RE_TBS_rb = N_sc*int(N_sym) - N_dmrs - N_oh
+RE_TBS_total = min(156,RE_TBS_rb)*int(RB)
+
+mcs_table_256Q = {0: [0,2,0.1171875], 1: [1,2,0.188476563], 2: [2,2,0.30078125], 3: [3,2,0.438476563], 4: [4,2,0.587890625], 5: [5,4,0.369140625], 6: [6,4,0.423828125], 7: [7,4,0.478515625], 8: [8,4,0.540039063], 9: [9,4,0.6015625], 10: [10,4,0.642578125], 11: [11,6,0.455078125], 12: [12,6,0.504882813], 13: [13,6,0.553710938], 14: [14,6,0.6015625], 15: [15,6,0.650390625], 16: [16,6,0.702148438], 17: [17,6,0.75390625], 18: [18,6,0.802734375], 19: [19,6,0.852539063], 20: [20,8,0.666503906], 21: [21,8,0.694335938], 22: [22,8,0.736328125], 23: [23,8,0.778320313], 24: [24,8,0.821289063], 25: [25,8,0.864257813], 26: [26,8,0.895019531], 27: [27,8,0.92578125]}
+
+mcs_table_64Q = {0: [0,2,0.1171875], 1: [1,2,0.153320313], 2: [2,2,0.188476563], 3: [3,2,0.245117188], 4: [4,2,0.30078125], 5: [5,2,0.370117188], 6: [6,2,0.438476563], 7: [7,2,0.513671875], 8: [8,2,0.587890625], 9: [9,2,0.663085938], 10: [10,4,0.33203125], 11: [11,4,0.369140625], 12: [12,4,0.423828125], 13: [13,4,0.478515625], 14: [14,4,0.540039063], 15: [15,4,0.6015625], 16: [16,4,0.642578125], 17: [17,6,0.427734375], 18: [18,6,0.455078125], 19: [19,6,0.504882813], 20: [20,6,0.553710938], 21: [21,6,0.6015625], 22: [22,6,0.650390625], 23: [23,6,0.702148438], 24: [24,6,0.75390625], 25: [25,6,0.802734375], 26: [26,6,0.852539063], 27: [27,6,0.888671875], 28: [28,6,0.92578125]}
+
+
+#print(mcs_table[1][0]*2)
+if int( mcs_Table) == 1:
+    for i in range (0,28):
+        if int(mcs_table_256Q[i][0]) == int(mcs):
+            #print(mcs_table[i][2])
+            Ninfo_interm =RE_TBS_total*(mcs_table_256Q[i][2])*(mcs_table_256Q[i][1])*int(N_layers)
+            n1 = max(3,(math.floor(math.log(Ninfo_interm,2)))-6)
+            Ninfo_quant = max(24,(2**n1)*math.floor(Ninfo_interm/(2**n1)))
+            n2 = math.floor(math.log((Ninfo_interm-n1),2)) - 5
+            Ninfo_quant2  = max(3840,(2**n2)*round(((Ninfo_interm-n1)/(2**n2)),0))
+            c1 = math.ceil((Ninfo_quant2+24)/3816)
+            c2 = math.ceil((Ninfo_quant2+24)/8424)
+            if mcs_table_256Q[i][2] <= 0.25:
+                TBS = (8*c1)*(math.ceil((Ninfo_quant2+24)/(8*c1)))-24
+                if sys.version_info[0] < 3:
+                    print("### TBS is:", TBS,"bits ###")
+                else:
+                    print('\033[91m'+'\033[1m'+"TBS is:", str(TBS)+'\033[0m')
+            elif Ninfo_quant2 > 8424:
+                TBS = (8*c2)*(math.ceil((Ninfo_quant2+24)/(8*c2)))-24
+                if sys.version_info[0] < 3:
+                    print("### TBS is:", TBS,"bits ###")
+                else:
+                    print('\033[91m'+'\033[1m'+"TBS is:", str(TBS)+'\033[0m')
+            else:
+                TBS = (8)*(math.ceil((Ninfo_quant2+24)/(8)))-24
+                if sys.version_info[0] < 3:
+                    print("### TBS is:", TBS,"bits ###")
+                else:
+                    print('\033[91m'+'\033[1m'+"TBS is:", str(TBS)+'\033[0m')
+
+
+elif int(mcs_Table) == 0:
+    for i in range (0,29):
+        if int(mcs_table_64Q[i][0]) == int(mcs):
+            #print(mcs_table[i][2])
+            Ninfo_interm =RE_TBS_total*(mcs_table_64Q[i][2])*(mcs_table_64Q[i][1])*int(N_layers)
+            n1 = max(3,(math.floor(math.log(Ninfo_interm,2)))-6)
+            Ninfo_quant = max(24,(2**n1)*math.floor(Ninfo_interm/(2**n1)))
+            n2 = math.floor(math.log((Ninfo_interm-n1),2)) - 5
+            Ninfo_quant2  = max(3840,(2**n2)*round(((Ninfo_interm-n1)/(2**n2)),0))
+            c1 = math.ceil((Ninfo_quant2+24)/3816)
+            c2 = math.ceil((Ninfo_quant2+24)/8424)
+            if mcs_table_64Q[i][2] <= 0.25:
+                TBS = (8*c1)*(math.ceil((Ninfo_quant2+24)/(8*c1)))-24
+                if sys.version_info[0] < 3:
+                    print("### TBS is:", TBS,"bits ###")
+                else:
+                    print('\033[91m'+'\033[1m'+"TBS is:", str(TBS)+'\033[0m')
+            elif Ninfo_quant2 > 8424:
+                TBS = (8*c2)*(math.ceil((Ninfo_quant2+24)/(8*c2)))-24
+                if sys.version_info[0] < 3:
+                    print("### TBS is:", TBS,"bits ###")
+                else:
+                    print('\033[91m'+'\033[1m'+"TBS is:", str(TBS)+'\033[0m')
+            else:
+                TBS = (8)*(math.ceil((Ninfo_quant2+24)/(8)))-24
+                if sys.version_info[0] < 3:
+                    print("### TBS is:", TBS,"bits ###")
+                else:
+                    print('\033[91m'+'\033[1m'+"TBS is:", str(TBS)+'\033[0m')
+
+else:
+    print("You entered an invalid value for MCS Table. Please close program and run again using value 1 if DL-256QAM is enabled, else enter 0: ")
+
+
+                                                   
